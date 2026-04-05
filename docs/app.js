@@ -5,13 +5,13 @@ const state = {
   secret: '',
   weekStart: getMonday(new Date()),
   lastAutoScrolledWeekStart: null,
+  lastAutoScrolledYear: null,
   selectedYear: new Date().getFullYear(),
   yearCache: new Map(),
 };
 
 const YEAR_CACHE_TTL_MS = 5 * 60 * 1000;
 let passcodeResolver = null;
-const TODAY_ISO = toIsoDate(new Date());
 
 const el = {
   passcodeBtn: document.getElementById('passcodeBtn'),
@@ -85,6 +85,10 @@ async function init() {
   hydrateSecret();
   updatePasscodeButton();
 
+  // Always anchor landing state to the user's local current week/year.
+  state.weekStart = getMonday(new Date());
+  state.selectedYear = new Date().getFullYear();
+
   setView('weekly');
   await renderWeek();
 
@@ -107,9 +111,10 @@ function setView(view) {
 
 async function renderWeek() {
   try {
+    const todayIso = getTodayIso();
     const startIso = toIsoDate(state.weekStart);
     const endIso = toIsoDate(addDays(state.weekStart, 6));
-    const isCurrentWeek = TODAY_ISO >= startIso && TODAY_ISO <= endIso;
+    const isCurrentWeek = todayIso >= startIso && todayIso <= endIso;
     el.weekLabel.textContent = `${formatWeeklyDate(startIso)} to ${formatWeeklyDate(endIso)}`;
     setStatus('Loading week...');
 
@@ -120,7 +125,7 @@ async function renderWeek() {
     const frag = document.createDocumentFragment();
     for (let i = 0; i < 7; i += 1) {
       const date = toIsoDate(addDays(state.weekStart, i));
-      frag.appendChild(createDayCard(date, tasksByDate[date] || [], journals[date] || null));
+      frag.appendChild(createDayCard(date, tasksByDate[date] || [], journals[date] || null, todayIso));
     }
 
     el.weekGrid.replaceChildren(frag);
@@ -145,10 +150,10 @@ async function renderWeek() {
   }
 }
 
-function createDayCard(date, tasks, journal) {
+function createDayCard(date, tasks, journal, todayIso) {
   const card = document.createElement('article');
   card.className = 'day-card';
-  if (date === TODAY_ISO) {
+  if (date === todayIso) {
     card.classList.add('today');
   }
 
@@ -299,6 +304,8 @@ function createTaskRow(task) {
 
 async function renderYear() {
   try {
+    const todayIso = getTodayIso();
+    const currentYear = new Date().getFullYear();
     disableAllButtons(true);
     el.yearLabel.textContent = String(state.selectedYear);
     setStatus('Loading year...');
@@ -309,10 +316,25 @@ async function renderYear() {
 
     const frag = document.createDocumentFragment();
     for (let month = 0; month < 12; month += 1) {
-      frag.appendChild(createMonth(state.selectedYear, month, tasksByDate, journalsByDate));
+      frag.appendChild(createMonth(state.selectedYear, month, tasksByDate, journalsByDate, todayIso));
     }
 
     el.yearGrid.replaceChildren(frag);
+
+    if (state.selectedYear === currentYear && state.lastAutoScrolledYear !== currentYear) {
+      state.lastAutoScrolledYear = currentYear;
+      requestAnimationFrame(() => {
+        const todayCell = el.yearGrid.querySelector('.day-cell.today');
+        if (todayCell) {
+          todayCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      });
+    }
+
+    if (state.selectedYear !== currentYear) {
+      state.lastAutoScrolledYear = null;
+    }
+
     setStatus('Year loaded.');
   } catch (error) {
     setStatus(`Year load failed: ${error.message}`);
@@ -321,27 +343,26 @@ async function renderYear() {
   }
 }
 
-function createMonth(year, month, tasksByDate, journalsByDate) {
+function createMonth(year, month, tasksByDate, journalsByDate, todayIso) {
   const wrap = document.createElement('section');
   wrap.className = 'month';
 
   const label = document.createElement('h3');
-  label.textContent = new Date(Date.UTC(year, month, 1)).toLocaleString(undefined, {
+  label.textContent = new Date(year, month, 1).toLocaleString(undefined, {
     month: 'long',
     year: 'numeric',
-    timeZone: 'UTC',
   });
 
   const days = document.createElement('div');
   days.className = 'month-days';
 
-  const count = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const count = new Date(year, month + 1, 0).getDate();
   for (let day = 1; day <= count; day += 1) {
-    const date = toIsoDate(new Date(Date.UTC(year, month, day)));
+    const date = toIsoDate(new Date(year, month, day));
 
     const cell = document.createElement('button');
     cell.className = 'day-cell';
-    if (date === TODAY_ISO) {
+    if (date === todayIso) {
       cell.classList.add('today');
     }
     cell.type = 'button';
@@ -364,7 +385,7 @@ function createMonth(year, month, tasksByDate, journalsByDate) {
     cell.appendChild(summary);
 
     cell.addEventListener('click', async () => {
-      state.weekStart = getMonday(new Date(`${date}T00:00:00Z`));
+      state.weekStart = getMonday(parseIsoDate(date));
       setView('weekly');
       await renderWeek();
     });
@@ -554,18 +575,18 @@ function disableAllButtons(disabled) {
 }
 
 function formatWeeklyDate(isoDate) {
-  const date = new Date(`${isoDate}T00:00:00Z`);
-  const weekday = date.toLocaleString(undefined, { weekday: 'short', timeZone: 'UTC' });
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const year = date.getUTCFullYear();
+  const date = parseIsoDate(isoDate);
+  const weekday = date.toLocaleString(undefined, { weekday: 'short' });
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
   return `${weekday} ${year}年${month}月${day}日`;
 }
 
 function formatYearlyDate(isoDate) {
-  const date = new Date(`${isoDate}T00:00:00Z`);
-  const weekday = date.toLocaleString(undefined, { weekday: 'short', timeZone: 'UTC' });
-  const day = String(date.getUTCDate()).padStart(2, '0');
+  const date = parseIsoDate(isoDate);
+  const weekday = date.toLocaleString(undefined, { weekday: 'short' });
+  const day = String(date.getDate()).padStart(2, '0');
   return `${weekday} ${day}日`;
 }
 
@@ -579,20 +600,32 @@ function groupByDate(tasks) {
 }
 
 function toIsoDate(date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getTodayIso() {
+  return toIsoDate(new Date());
+}
+
+function parseIsoDate(isoDate) {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function addDays(date, days) {
   const clone = new Date(date);
-  clone.setUTCDate(clone.getUTCDate() + days);
+  clone.setDate(clone.getDate() + days);
   return clone;
 }
 
 function getMonday(date) {
-  const clone = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const day = clone.getUTCDay();
+  const clone = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const day = clone.getDay();
   const offset = day === 0 ? -6 : 1 - day;
-  clone.setUTCDate(clone.getUTCDate() + offset);
+  clone.setDate(clone.getDate() + offset);
   return clone;
 }
 

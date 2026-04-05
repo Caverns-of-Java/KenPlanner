@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kenplanner-v2';
+const CACHE_NAME = 'kenplanner-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -29,7 +29,30 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+
+      try {
+        const fresh = await fetch(event.request);
+
+        // Keep an offline fallback copy for same-origin assets/documents.
+        if (new URL(event.request.url).origin === self.location.origin) {
+          cache.put(event.request, fresh.clone());
+        }
+
+        return fresh;
+      } catch (error) {
+        const cached = await cache.match(event.request);
+        if (cached) {
+          return cached;
+        }
+        throw error;
+      }
+    })()
   );
 });
