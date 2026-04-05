@@ -203,19 +203,29 @@ function createDayCard(date, tasks, journal) {
   const saveJournalBtn = document.createElement('button');
   saveJournalBtn.className = 'save-journal-btn';
   saveJournalBtn.textContent = 'Save Journal';
-  saveJournalBtn.addEventListener('click', async () => {
+  const saveJournal = async () => {
+    if (saveJournalBtn.disabled) {
+      return;
+    }
     try {
+      setButtonBusy(saveJournalBtn, true);
+      setStatus('Saving journal...');
       await apiPost('journal-update', {
         date,
         entry: journalBox.value,
         expectedVersion: journal?.version,
       });
+      setStatus('Journal saved.');
       await renderWeek();
       state.yearCache.delete(state.selectedYear);
     } catch (error) {
       setStatus(`Journal save failed: ${error.message}`);
+    } finally {
+      setButtonBusy(saveJournalBtn, false);
     }
-  });
+  };
+  saveJournalBtn.addEventListener('click', saveJournal);
+  journalBox.addEventListener('blur', saveJournal);
 
   const actions = document.createElement('div');
   actions.className = 'card-actions';
@@ -289,6 +299,7 @@ function createTaskRow(task) {
 
 async function renderYear() {
   try {
+    disableAllButtons(true);
     el.yearLabel.textContent = String(state.selectedYear);
     setStatus('Loading year...');
 
@@ -305,6 +316,8 @@ async function renderYear() {
     setStatus('Year loaded.');
   } catch (error) {
     setStatus(`Year load failed: ${error.message}`);
+  } finally {
+    disableAllButtons(false);
   }
 }
 
@@ -524,6 +537,20 @@ function updatePasscodeButton() {
 function setButtonBusy(button, isBusy) {
   button.disabled = isBusy;
   button.classList.toggle('is-busy', isBusy);
+}
+
+function disableAllButtons(disabled) {
+  // Disable year navigation buttons (keep week nav enabled for quick flicking)
+  el.prevYearBtn.disabled = disabled;
+  el.nextYearBtn.disabled = disabled;
+  el.refreshYearBtn.disabled = disabled;
+  el.weeklyTab.disabled = disabled;
+  el.yearlyTab.disabled = disabled;
+
+  // Disable all dynamically created buttons
+  document.querySelectorAll('.add-task-btn, .save-journal-btn, .delete-task-btn, .day-cell').forEach((btn) => {
+    btn.disabled = disabled;
+  });
 }
 
 function formatWeeklyDate(isoDate) {
