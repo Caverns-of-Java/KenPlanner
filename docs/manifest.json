@@ -1,0 +1,22 @@
+{
+  "name": "KenPlanner",
+  "short_name": "KenPlanner",
+  "description": "Personal planner for weekly and yearly task tracking",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3eee5",
+  "theme_color": "#b3541e",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
