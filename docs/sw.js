@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kenplanner-v3';
+const CACHE_NAME = 'kenplanner-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',

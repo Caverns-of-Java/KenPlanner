@@ -50,6 +50,7 @@ body.locked .app-shell {
   gap: 0.5rem;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .toolbar button {
@@ -60,6 +61,10 @@ body.locked .app-shell {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  position: fixed;
+  top: 0.75rem;
+  right: max(1rem, calc((100vw - 1200px) / 2 + 1rem));
+  z-index: 35;
   border-radius: 999px;
   border: 1px solid transparent;
   padding: 0.3rem 0.6rem;
@@ -384,6 +389,10 @@ button:hover {
 }
 
 @media (max-width: 860px) {
+  .status-chip {
+    right: 0.75rem;
+  }
+
   .add-task-btn,
   .delete-task-btn {
     min-width: 2.25rem;
