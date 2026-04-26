@@ -230,7 +230,6 @@ function createDayCard(date, tasks, journal, todayIso) {
     }
   };
   saveJournalBtn.addEventListener('click', saveJournal);
-  journalBox.addEventListener('blur', saveJournal);
 
   const actions = document.createElement('div');
   actions.className = 'card-actions';
