@@ -72,14 +72,6 @@ function doPost(e) {
     const endpoint = getEndpoint_(e);
     const payload = parsePayload_(e);
 
-    if (!isAuthorized_(payload.secret)) {
-      return err_('UNAUTHORIZED', 'Invalid shared secret.');
-    }
-
-    if (endpoint === 'auth-check') {
-      return ok_({ authorized: true });
-    }
-
     if (endpoint === 'task-add') {
       const date = (payload.date || '').trim();
       const description = (payload.description || '').trim();
@@ -418,14 +410,6 @@ function parsePayload_(e) {
   } catch (error) {
     throw new Error('PARSE_ERROR');
   }
-}
-
-function isAuthorized_(secret) {
-  const expected = PropertiesService.getScriptProperties().getProperty('SHARED_SECRET');
-  if (!expected) {
-    throw new Error('MISSING_SHARED_SECRET');
-  }
-  return String(secret || '') === expected;
 }
 
 function ok_(data) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kenplanner-v5';
+const CACHE_NAME = 'ethanplannerv2-v1';
 const STATIC_ASSETS = [
   './',
   './index.html',

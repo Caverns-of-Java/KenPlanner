@@ -1,11 +1,11 @@
 :root {
-  --bg: #f3eee5;
-  --surface: #fffdf8;
-  --ink: #1f1d1a;
-  --accent: #b3541e;
-  --accent-2: #2f5d50;
-  --muted: #6d665d;
-  --border: #d4c8b7;
+  --bg: #fff1f2;
+  --surface: #fff9fa;
+  --ink: #23181a;
+  --accent: #c1172c;
+  --accent-2: #8f1021;
+  --muted: #7e575c;
+  --border: #e7c7cc;
 }
 
 * {
@@ -17,8 +17,8 @@ body {
   font-family: 'Space Grotesk', sans-serif;
   color: var(--ink);
   background:
-    radial-gradient(circle at 8% 8%, #f9dca4 0, rgba(249, 220, 164, 0) 25%),
-    radial-gradient(circle at 95% 2%, #f5c6aa 0, rgba(245, 198, 170, 0) 20%),
+    radial-gradient(circle at 8% 8%, #ffd7d0 0, rgba(255, 215, 208, 0) 28%),
+    radial-gradient(circle at 95% 2%, #fecdd3 0, rgba(254, 205, 211, 0) 24%),
     var(--bg);
 }
 
@@ -84,15 +84,15 @@ body.locked .app-shell {
 }
 
 .status-chip.ready {
-  color: #1d5b43;
-  background: rgba(47, 93, 80, 0.14);
-  border-color: rgba(47, 93, 80, 0.3);
+  color: #8f1021;
+  background: rgba(193, 23, 44, 0.14);
+  border-color: rgba(193, 23, 44, 0.3);
 }
 
 .status-chip.loading {
-  color: #9b4a13;
-  background: rgba(179, 84, 30, 0.14);
-  border-color: rgba(179, 84, 30, 0.3);
+  color: #a3172a;
+  background: rgba(193, 23, 44, 0.2);
+  border-color: rgba(193, 23, 44, 0.35);
 }
 
 .status-chip.error {
@@ -182,7 +182,7 @@ button:hover {
 }
 
 .day-card.today {
-  background: rgba(179, 84, 30, 0.12);
+  background: rgba(193, 23, 44, 0.12);
 }
 
 .day-card h3 {
@@ -309,15 +309,15 @@ button:hover {
   min-height: 0;
   padding: 0.45rem 0.5rem;
   cursor: pointer;
-  background: #fffaf1;
+  background: #fff5f6;
   display: grid;
   gap: 0.18rem;
   text-align: left;
 }
 
 .day-cell.today {
-  background: rgba(179, 84, 30, 0.12);
-  border-color: rgba(179, 84, 30, 0.4);
+  background: rgba(193, 23, 44, 0.12);
+  border-color: rgba(193, 23, 44, 0.4);
 }
 
 .add-task-btn.is-busy,

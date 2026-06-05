@@ -1,11 +1,11 @@
 {
-  "name": "KenPlanner",
-  "short_name": "KenPlanner",
+  "name": "EthanPlannerv2",
+  "short_name": "EPlannerV2",
   "description": "Personal planner for weekly and yearly task tracking",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f3eee5",
-  "theme_color": "#b3541e",
+  "background_color": "#fff1f2",
+  "theme_color": "#c1172c",
   "icons": [
     {
       "src": "./icons/icon-192.png",
