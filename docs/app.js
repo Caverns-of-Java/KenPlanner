@@ -1,4 +1,4 @@
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfV_2FEvqnA4PDALuB_5t7flqQFTX9pDQBvWege6xnWmXu0xILK-eZK1vwiTdaRfLc/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo6KB2huHC8WR2X9aU0siCDU7pcL5T-rBGg7T5GcjgcQf-8ZNV9BITlw2dXrOPWyCT7w/exec';
 
 const state = {
   apiBase: APPS_SCRIPT_URL.trim(),
@@ -430,24 +430,10 @@ async function apiPost(endpoint, body) {
   const res = await fetch(url.toString(), {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ ...body, secret: state.secret }),
+    body: JSON.stringify(body),
   });
 
   const payload = await res.json();
-
-  if (payload?.error === 'UNAUTHORIZED') {
-    clearSecret();
-    await ensureSecret();
-
-    const retryRes = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ ...body, secret: state.secret }),
-    });
-    const retryPayload = await retryRes.json();
-    return unwrap(retryPayload);
-  }
-
   return unwrap(payload);
 }
 
@@ -480,10 +466,7 @@ function savePasscode() {
     setStatus('Please enter your passcode.');
     return;
   }
-
-  validateAndStorePasscode(passcode).catch((error) => {
-    setStatus(`Passcode check failed: ${error.message}`);
-  });
+  validateAndStorePasscode(passcode);
 }
 
 function openPasscodeModal(required) {
@@ -506,25 +489,13 @@ function closePasscodeModal(cancelled) {
   }
 }
 
-async function validateAndStorePasscode(passcode) {
-  const url = new URL(state.apiBase);
-  url.searchParams.set('endpoint', 'auth-check');
-
-  const res = await fetch(url.toString(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ secret: passcode }),
-  });
-
-  const payload = await res.json();
-  unwrap(payload);
-
+function validateAndStorePasscode(passcode) {
   state.secret = passcode;
-  sessionStorage.setItem('kp.secret', passcode);
+  sessionStorage.setItem('epv2.secret', passcode);
   if (el.rememberPasscode.checked) {
-    localStorage.setItem('kp.secret', passcode);
+    localStorage.setItem('epv2.secret', passcode);
   } else {
-    localStorage.removeItem('kp.secret');
+    localStorage.removeItem('epv2.secret');
   }
 
   updatePasscodeButton();
@@ -533,16 +504,14 @@ async function validateAndStorePasscode(passcode) {
 }
 
 function hydrateSecret() {
-  const saved = sessionStorage.getItem('kp.secret') || localStorage.getItem('kp.secret');
-  if (saved) {
-    state.secret = saved;
-  }
+  const saved = sessionStorage.getItem('epv2.secret') || localStorage.getItem('epv2.secret');
+  state.secret = saved || '';
 }
 
 function clearSecret() {
   state.secret = '';
-  sessionStorage.removeItem('kp.secret');
-  localStorage.removeItem('kp.secret');
+  sessionStorage.removeItem('epv2.secret');
+  localStorage.removeItem('epv2.secret');
   updatePasscodeButton();
 }
 
@@ -579,14 +548,14 @@ function formatWeeklyDate(isoDate) {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
-  return `${weekday} ${year}年${month}月${day}日`;
+  return `${weekday} ${year}-${month}-${day}`;
 }
 
 function formatYearlyDate(isoDate) {
   const date = parseIsoDate(isoDate);
   const weekday = date.toLocaleString(undefined, { weekday: 'short' });
   const day = String(date.getDate()).padStart(2, '0');
-  return `${weekday} ${day}日`;
+  return `${weekday} ${day}`;
 }
 
 function groupByDate(tasks) {
